@@ -615,7 +615,7 @@ def main():
             # Populate the DataFrame with the results
             # Populate the DataFrame with the results
             for node in G.nodes():
-                node_label = G.nodes[node].get('label', str(node))  # Use node ID as label if 'label' attribute is missing
+                node_label = G.nodes[node].get('Label', str(node))  # Use node ID as label if 'label' attribute is missing
                 community = partition[node]
                 personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
                 new_row = pd.DataFrame({
@@ -724,9 +724,14 @@ def main():
                             nodes4.at[index, "group"] = partition[node_id]
 
                         # Generate the node data
+                        # Generate the node data
                         node_data = []
-                        for _, row in nodes4.iterrows():
-                            node_data.append({"id": str(row["Id"]), "label": str(row["Label"]), "size": row["size"], "group": row["group"]})
+                        for _, row in nodes_df.iterrows():
+                            node_id = str(row["Id"])
+                            node_label = str(row["Label"])
+                            node_size = pagerank[node_id] * 1000
+                            node_group = partition[node_id]
+                            node_data.append({"id": node_id, "label": node_label, "size": node_size, "group": node_group})
 
                         # Generate the edge data
                         edge_data = []
