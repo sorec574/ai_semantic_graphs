@@ -1,4 +1,4 @@
-chimport streamlit as st
+import streamlit as st
 import pandas as pd
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
