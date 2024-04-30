@@ -665,9 +665,7 @@ def main():
                     # Create a placeholder for the semantic research output
                     semantic_research_placeholder = st.empty()
                     try:
-                        result =  perform_semantic_research(topic,num_entities_per_run,relationship_batch_size)
 
-                
 
                         #st.dataframe(results_df)
                         st.subheader("DataFrame Summary")
