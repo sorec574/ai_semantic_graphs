@@ -25,7 +25,8 @@ import spacy
 from spacy_entity_linker import EntityLinker
 from rake_nltk import Rake
 import zipfile
-
+import semantic_research
+from semantic_research import perform_semantic_research
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -655,47 +656,6 @@ def main():
                     st.markdown(commentary)
                 else:
                     st.error("Failed to generate commentary and recommendations.")
-            # Generate Mermaid chart using Anthropic API
-            with st.spinner("Generating Mermaid chart..."):
-                mermaid_prompt = f"""
-                    Generate a Graphviz DOT representation of the hierarchical structure of the semantic sitemap. Use the following JSON sitemap as input:
-                    {sitemap_json}
-                    Example Graphviz DOT:
-                    
-                    digraph {{
-                        rankdir=LR;
-                        "Pillar 1" -> "Cluster 1";
-                        "Pillar 1" -> "Cluster 2";
-                        "Cluster 1" -> "Spoke 1";
-                        "Cluster 1" -> "Spoke 2";
-                        "Cluster 2" -> "Spoke 3";
-                        "Cluster 2" -> "Spoke 4";
-                    }}
-                    
-                    DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
-                llm_call_args = {
-                    "api_key": ANTHROPIC_API_KEY,
-                    "system_prompt": system_prompt,
-                    "prompt": mermaid_prompt,
-                    "model_name": model_name,
-                    "max_tokens": 4000,
-                    "temperature": 0.1,
-                }
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    mermaid_response = None
-                    progress = stqdm(executor.map(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
-                    for result in progress:
-                        if result is not None:
-                            mermaid_response = result
-                            break
-                if mermaid_response is not None:
-                    mermaid_chart = mermaid_response
-                    st.markdown("## Site Map Visualization")
-                    st.graphviz_chart(mermaid_chart, use_container_width=True)
-                else:
-                    st.error("Failed to generate Mermaid chart.")
-                # Create a zip file containing the CSV files
-
 
             with st.spinner("Semantic Understanding Research"):
                 try:
