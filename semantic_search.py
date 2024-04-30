@@ -27,7 +27,7 @@ from rake_nltk import Rake
 import zipfile
 import sys
 import subprocess
-
+import streamlit.components.v1 as components
 # Define models
 Opus = "claude-3-opus-20240229"
 Sonnet = "claude-3-sonnet-20240229"
