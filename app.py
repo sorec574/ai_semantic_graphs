@@ -567,7 +567,16 @@ def main():
 
             # Update the nodes_df and edges_df DataFrames after merging similar nodes
             nodes_df = pd.DataFrame({"Id": [node for node in G.nodes()], "Label": [G.nodes[node].get('label', '') for node in G.nodes()]})
-            edges_df = pd.DataFrame({"Source": [edge[0] for edge in G.edges()], "Target": [edge[1] for edge in G.edges()], "Type": [G.edges[edge].get('label', '') for edge in G.edges()]})
+            
+            # Create a new edges_df DataFrame with all edges from the merged graph
+            edges_data = []
+            for edge in G.edges():
+                source_id = edge[0]
+                target_id = edge[1]
+                edge_type = G.edges[edge].get('label', '')
+                if source_id != target_id:  # Exclude self-loops
+                    edges_data.append({"Source": source_id, "Target": target_id, "Type": edge_type})
+            edges_df = pd.DataFrame(edges_data)
             with st.spinner("Calculating graph metrics..."):
                 pagerank = nx.pagerank(G)
                 time.sleep(0.1)  # Simulate progress
