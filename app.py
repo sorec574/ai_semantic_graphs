@@ -27,6 +27,7 @@ from rake_nltk import Rake
 import zipfile
 import semantic_search
 from semantic_search import perform_semantic_research
+import openai 
 
 nltk.download('punkt')
 nltk.download('stopwords')
