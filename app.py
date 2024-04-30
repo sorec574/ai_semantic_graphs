@@ -666,17 +666,16 @@ def main():
                     semantic_research_placeholder = st.empty()
                     try:
                         result =  perform_semantic_research(topic,num_entities_per_run,relationship_batch_size)
-                        output = result
-                        
+
+                
 
                         #st.dataframe(results_df)
                         st.subheader("DataFrame Summary")
-                        st.dataframe(output[0],use_container_width=True)
-                        st.dataframe(output[1],use_container_width=True)
-                        st.dataframe(output[2],use_container_width=True)
+                        st.dataframe(nodes_df,use_container_width=True)
+                        st.dataframe(edges_df,use_container_width=True)
 
-                        nodes4 = output[0]
-                        edges4 = output[1]
+                        nodes4 = nodes_df
+                        edges4 = edges_df
                         nodes4 = nodes4.drop_duplicates(subset=['Label'])
 
                         G = nx.Graph()
