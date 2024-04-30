@@ -28,6 +28,8 @@ import zipfile
 import semantic_search
 from semantic_search import perform_semantic_research
 import openai 
+import streamlit.components.v1 as components
+
 
 nltk.download('punkt')
 nltk.download('stopwords')
