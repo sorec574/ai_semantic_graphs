@@ -564,6 +564,10 @@ def main():
                 G.add_edge(row['Source'], row['Target'], label=row['Type'])
             # Merge similar nodes
             G = merge_similar_nodes(G, similarity_threshold=0.7)
+
+            # Update the nodes_df and edges_df DataFrames after merging similar nodes
+            nodes_df = pd.DataFrame({"Id": [node for node in G.nodes()], "Label": [G.nodes[node].get('label', '') for node in G.nodes()]})
+            edges_df = pd.DataFrame({"Source": [edge[0] for edge in G.edges()], "Target": [edge[1] for edge in G.edges()], "Type": [G.edges[edge].get('label', '') for edge in G.edges()]})
             with st.spinner("Calculating graph metrics..."):
                 pagerank = nx.pagerank(G)
                 time.sleep(0.1)  # Simulate progress
