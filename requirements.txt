@@ -1,0 +1,15 @@
+anthropic 
+langchain_anthropic 
+langchain 
+networkx
+python-louvain
+futures
+scipy
+python-Levenshtein
+tqdm
+stqdm
+spacy
+nltk
+scikit-learn
+spacy-entity-linker
+rake_nltk
