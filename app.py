@@ -566,61 +566,42 @@ def main():
             G = nx.DiGraph()
             # Add nodes to the graph
             for _, row in nodes_df.iterrows():
-                node_id = row['Id']
-                node_label = f"Node {node_id}"  # Assign a default label if 'Label' is the same as 'Id'
-                if pd.notna(row['Label']) and row['Label'] != str(node_id):
-                    node_label = row['Label']  # Use the 'Label' value if it's different from 'Id'
-                G.add_node(node_id, label=node_label)
-            
+                G.add_node(row['Id'], label=row['Label'])
             # Add edges to the graph
             for _, row in edges_df.iterrows():
-                source_id = row['Source']
-                target_id = row['Target']
-                edge_type = row['Type']
-                if source_id in G.nodes and target_id in G.nodes:
-                    G.add_edge(source_id, target_id, label=edge_type)
-
-            G, nodes_df, edges_df = merge_similar_nodes(G, nodes_df, edges_df, similarity_threshold=0.8)
-
+                G.add_edge(row['Source'], row['Target'], label=row['Type'])
+            # Merge similar nodes
+            G = merge_similar_nodes(G, similarity_threshold=0.7)
             with st.spinner("Calculating graph metrics..."):
-                progress = stqdm(total=4, desc="Calculating Graph Metrics")
                 pagerank = nx.pagerank(G)
-                progress.update(1)
                 time.sleep(0.1)  # Simulate progress
                 betweenness_centrality = nx.betweenness_centrality(G)
-                progress.update(1)
                 time.sleep(0.1)  # Simulate progress
                 closeness_centrality = nx.closeness_centrality(G)
-                progress.update(1)
                 time.sleep(0.1)  # Simulate progress
                 eigenvector_centrality = nx.eigenvector_centrality_numpy(G)
-                progress.update(1)
                 time.sleep(0.1)  # Simulate progress
-                progress.close()
                 status_text.text("Graph metrics calculated.")
             # Perform community detection using Louvain algorithm
             undirected_G = G.to_undirected()
             partition = community_louvain.best_partition(undirected_G)
             # Calculate personalized PageRank for each pillar topic
-            # Calculate personalized PageRank for each pillar topic
             personalized_pagerank = {}
             for node in G.nodes():
-                if 'label' in G.nodes[node] and G.nodes[node]['label'].startswith('Pillar:'):
+                if G.nodes[node]['label'].startswith('Pillar:'):
                     personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
-
+    
             
             # Create a DataFrame to store the results
             results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
                                                'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
             # Populate the DataFrame with the results
-
             for node in G.nodes():
-                node_id = node
-                node_label = G.nodes[node].get('label', '')
+                node_label = G.nodes[node]['label']
                 community = partition[node]
                 personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
                 new_row = pd.DataFrame({
-                    'Node': [node_id],
+                    'Node': [node],
                     'Label': [node_label],
                     'PageRank': [pagerank[node]],
                     'Betweenness Centrality': [betweenness_centrality[node]],
@@ -629,9 +610,12 @@ def main():
                     'Community': [community],
                     'Personalized PageRank': [personalized_scores]
                 })
-                results_df = pd.concat([results_df, new_row], ignore_index=True, sort=False)
+                results_df = pd.concat([results_df, new_row], ignore_index=True, sort=False)  # Updated to suppress FutureWarning
             # Sort the DataFrame by PageRank in descending order
             results_df = results_df.sort_values('PageRank', ascending=False)
+            status_text.text("Results DataFrame created.")
+
+
             progress_bar.progress(0.8)
             status_text.text("Results DataFrame created.")
             # Display the results
