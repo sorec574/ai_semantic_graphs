@@ -25,7 +25,6 @@ import spacy
 from spacy_entity_linker import EntityLinker
 from rake_nltk import Rake
 import zipfile
-import openai
 import sys
 import subprocess
 
@@ -35,8 +34,7 @@ Sonnet = "claude-3-sonnet-20240229"
 Haiku = "claude-3-haiku-20240307"
 
 ANTHROPIC_API_KEY = st.secrets["ANTHROPIC_API_KEY"]
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-openai.api_key = OPENAI_API_KEY
+
 
 CLOUD_NAME=st.secrets['CLOUD_NAME']
 CLOUD_API_KEY=st.secrets['CLOUD_API_KEY']
@@ -45,7 +43,6 @@ STABILITY_API_KEY = st.secrets['STABILITY_API_KEY']
 YOU_API_KEY = st.secrets['YOU_API_KEY']
 
 
-client = openai.Client(api_key=OPENAI_API_KEY)
 
 # Template for the sitemap structure
 # Template for the sitemap structure
