@@ -445,24 +445,26 @@ def merge_similar_nodes(G, similarity_threshold=0.8):
     Returns:
         NetworkX graph: The directed graph with similar nodes merged.
     """
-    # Find strongly connected components in the graph
-    sccs = list(nx.algorithms.components.strongly_connected_components(G))
+    # Create a dictionary to store the representative node for each label
+    label_to_node = {}
 
-    for scc in sccs:
-        if len(scc) > 1:
-            # Get the labels of the nodes in the strongly connected component
-            labels = [G.nodes[node].get('label', '') for node in scc]
-
-            # Find the most common label among the nodes
-            most_common_label = max(set(labels), key=labels.count)
-
-            # Merge nodes with similar labels
-            nodes_to_merge = [node for node in scc if G.nodes[node].get('label', '') != most_common_label]
-            if nodes_to_merge:
-                representative_node = next(iter(scc))  # Choose the first node as the representative
-                for node in nodes_to_merge:
-                    if Levenshtein.ratio(G.nodes[node].get('label', ''), most_common_label) >= similarity_threshold:
-                        G = nx.contracted_nodes(G, representative_node, node, self_loops=False)
+    for node in G.nodes():
+        label = G.nodes[node].get('label', '')
+        if label in label_to_node:
+            representative_node = label_to_node[label]
+            if node != representative_node:
+                # Merge the current node with the representative node
+                G = nx.contracted_nodes(G, representative_node, node, self_loops=False)
+        else:
+            # Check if there is a similar label in the dictionary
+            for existing_label in label_to_node:
+                if Levenshtein.ratio(label, existing_label) >= similarity_threshold:
+                    representative_node = label_to_node[existing_label]
+                    G = nx.contracted_nodes(G, representative_node, node, self_loops=False)
+                    break
+            else:
+                # If no similar label found, add the current node as the representative node
+                label_to_node[label] = node
 
     return G
 
