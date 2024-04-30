@@ -592,9 +592,10 @@ def main():
             undirected_G = G.to_undirected()
             partition = community_louvain.best_partition(undirected_G)
             # Calculate personalized PageRank for each pillar topic
+            # Calculate personalized PageRank for each pillar topic
             personalized_pagerank = {}
             for node in G.nodes():
-                if G.nodes[node]['label'].startswith('Pillar:'):
+                if 'label' in G.nodes[node] and G.nodes[node]['label'].startswith('Pillar:'):
                     personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
 
             
@@ -603,7 +604,7 @@ def main():
                                                'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
             # Populate the DataFrame with the results
             for node in G.nodes():
-                node_label = G.nodes[node]['label']
+                node_label = G.nodes[node].get('label', '')  # Use get() to handle missing 'label' attribute
                 community = partition[node]
                 personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
                 new_row = pd.DataFrame({
@@ -616,7 +617,7 @@ def main():
                     'Community': [community],
                     'Personalized PageRank': [personalized_scores]
                 })
-                results_df = pd.concat([results_df, new_row], ignore_index=True, sort=False)  # Updated to suppress FutureWarning
+                results_df = pd.concat([results_df, new_row], ignore_index=True, sort=False)
             # Sort the DataFrame by PageRank in descending order
             results_df = results_df.sort_values('PageRank', ascending=False)
             progress_bar.progress(0.8)
