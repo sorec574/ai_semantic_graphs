@@ -696,6 +696,139 @@ def main():
                     st.error("Failed to generate Mermaid chart.")
                 # Create a zip file containing the CSV files
 
+
+            with st.spinner("Semantic Understanding Research"):
+                try:
+                    # Create a placeholder for the semantic research output
+                    semantic_research_placeholder = st.empty()
+                    try:
+                        result =  perform_semantic_research(topic,num_entities,num_relationships)
+                        output = result
+                        
+
+                        #st.dataframe(results_df)
+                        st.subheader("DataFrame Summary")
+                        st.dataframe(output[0],use_container_width=True)
+                        st.dataframe(output[1],use_container_width=True)
+                        st.dataframe(output[2],use_container_width=True)
+
+                        nodes4 = output[0]
+                        edges4 = output[1]
+                        nodes4 = nodes4.drop_duplicates(subset=['Label'])
+
+                        G = nx.Graph()
+                        for _, row in nodes4.iterrows():
+                            G.add_node(row["Id"])
+                        for _, row in edges4.iterrows():
+                            if row["Source"] != row["Target"]:
+                                G.add_edge(row["Source"], row["Target"])
+
+                        # Calculate pagerank
+                        pagerank = nx.pagerank(G)
+
+                        # Calculate communities using Louvain algorithm
+                        partition = community_louvain.best_partition(G)
+
+                        # Update node data with pagerank and community
+                        for index, row in nodes4.iterrows():
+                            node_id = row["Id"]
+                            nodes4.at[index, "size"] = pagerank[node_id] * 1000  # Adjust the scaling factor as needed
+                            nodes4.at[index, "group"] = partition[node_id]
+
+                        # Generate the node data
+                        node_data = []
+                        for _, row in nodes4.iterrows():
+                            node_data.append({"id": str(row["Id"]), "label": str(row["Label"]), "size": row["size"], "group": row["group"]})
+
+                        # Generate the edge data
+                        edge_data = []
+                        for _, row in edges4.iterrows():
+                            edge_data.append({"from": str(row["Source"]), "to": str(row["Target"]), "label": str(row["Type"])})
+
+                        # Prepare the data as a JSON string
+                        data_json = json.dumps({"nodes": node_data, "edges": edge_data})
+
+                        # Generate the HTML code with placeholders for data
+                        html_template = """
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Interactive Network Visualization</title>
+                            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+                            <style>
+                                #network-container {
+                                    width: 100%;
+                                    height: 1200px;
+                                    border: 0px;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div id="network-container"></div>
+
+                            <script>
+                                var container = document.getElementById('network-container');
+                                var data = JSON.parse('{data_json}');
+
+                                var options = {
+                                    physics: {
+                                        enabled: true,
+                                        barnesHut: {
+                                            gravitationalConstant: -2000,
+                                            centralGravity: 0.3,
+                                            springLength: 95,
+                                            springConstant: 0.04,
+                                            damping: 0.09
+                                        }
+                                    },
+                                    layout: {
+                                        improvedLayout: true
+                                    },
+                                    width: '100%',
+                                    height: '1200px'
+                                };
+
+                                var network = new vis.Network(container, data, options);
+                            </script>
+                        </body>
+                        </html>
+                        """
+
+                        # Replace the placeholder with the actual data JSON string
+                        html_code = html_template.replace("{data_json}", data_json)
+                        time.sleep(10)
+                        # Render the HTML code using Streamlit's components
+                        components.html(html_code, height=1200, width=2400)
+                        #mermaid = result['mermaid_chart']
+                        # Remove any leading/trailing whitespace
+                        # Rest of the code...
+
+                    except Exception as e:
+                        print(f"Script execution failed with error: {str(e)}")
+
+                        print(f"This is the result from the semantic script: {result}")
+
+                except Exception as e:
+                    st.error(f"An error occurred while running the semantic script: {str(e)}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 zip_file_name = f"{topic}_csv_files.zip"
                 with zipfile.ZipFile(zip_file_name, "w") as zip_file:
                     zip_file.write(f"{topic}_entities.csv")
