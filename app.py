@@ -1,4 +1,4 @@
-import streamlit as st
+chimport streamlit as st
 import pandas as pd
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
@@ -25,8 +25,8 @@ import spacy
 from spacy_entity_linker import EntityLinker
 from rake_nltk import Rake
 import zipfile
-import semantic_research
-from semantic_research import perform_semantic_research
+import semantic_search
+from semantic_search import perform_semantic_research
 
 nltk.download('punkt')
 nltk.download('stopwords')
