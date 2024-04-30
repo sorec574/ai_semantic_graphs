@@ -567,8 +567,11 @@ def main():
             # Add nodes to the graph
             for _, row in nodes_df.iterrows():
                 node_id = row['Id']
-                node_label = row['Label']
+                node_label = f"Node {node_id}"  # Assign a default label if 'Label' is the same as 'Id'
+                if pd.notna(row['Label']) and row['Label'] != str(node_id):
+                    node_label = row['Label']  # Use the 'Label' value if it's different from 'Id'
                 G.add_node(node_id, label=node_label)
+            
             # Add edges to the graph
             for _, row in edges_df.iterrows():
                 source_id = row['Source']
@@ -700,7 +703,6 @@ def main():
 
                         nodes4 = nodes_df
                         edges4 = edges_df
-                        nodes4 = nodes4.drop_duplicates(subset=['Label'])
 
                         G = nx.Graph()
                         for _, row in nodes4.iterrows():
