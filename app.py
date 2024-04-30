@@ -693,8 +693,8 @@ def main():
                         # Update node data with pagerank and community
                         for index, row in nodes4.iterrows():
                             node_id = row["Id"]
-                            nodes4.at[index, "size"] = pagerank[node_id] * 1000  # Adjust the scaling factor as needed
-                            nodes4.at[index, "group"] = partition[node_id]
+                            nodes4.loc[index, "size"] = pagerank[node_id] * 1000
+                            nodes4.loc[index, "group"] = partition[node_id]
 
                         # Generate the node data
                         node_data = []
