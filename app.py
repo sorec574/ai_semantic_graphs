@@ -436,7 +436,7 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
             f.write(f"{relationship[0]},{relationship[1]},{relationship[2]}\n")
             time.sleep(0.01)  # Simulate progress
 
-def merge_similar_nodes(G, similarity_threshold=0.8):
+def merge_similar_nodes(G, similarity_threshold=0.9):
     """
     Merges similar nodes in the directed graph based on their label similarity.
     Args:
@@ -454,13 +454,13 @@ def merge_similar_nodes(G, similarity_threshold=0.8):
             representative_node = label_to_node[label]
             if node != representative_node:
                 # Merge the current node with the representative node
-                G = nx.contracted_nodes(G, representative_node, node, self_loops=False)
+                G = nx.contracted_nodes(G, representative_node, node, self_loops=True)
         else:
             # Check if there is a similar label in the dictionary
             for existing_label in label_to_node:
                 if Levenshtein.ratio(label, existing_label) >= similarity_threshold:
                     representative_node = label_to_node[existing_label]
-                    G = nx.contracted_nodes(G, representative_node, node, self_loops=False)
+                    G = nx.contracted_nodes(G, representative_node, node, self_loops=True)
                     break
             else:
                 # If no similar label found, add the current node as the representative node
