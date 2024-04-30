@@ -562,15 +562,22 @@ def main():
             nodes_df = pd.read_csv(f"{topic}_entities.csv")
             edges_df = pd.read_csv(f"{topic}_relationships.csv")
             # Create a directed graph using NetworkX
+            # Merge similar nodes
+            G, nodes_df, edges_df = merge_similar_nodes(G, nodes_df, edges_df, similarity_threshold=0.8)
             G = nx.DiGraph()
             # Add nodes to the graph
             for _, row in nodes_df.iterrows():
-                G.add_node(row['Id'], label=row['Label'])
+                node_id = row['Id']
+                node_label = row['Label']
+                G.add_node(node_id, label=node_label)
             # Add edges to the graph
             for _, row in edges_df.iterrows():
-                G.add_edge(row['Source'], row['Target'], label=row['Type'])
-            # Merge similar nodes
-            G, nodes_df, edges_df = merge_similar_nodes(G, nodes_df, edges_df, similarity_threshold=0.8)
+                source_id = row['Source']
+                target_id = row['Target']
+                edge_type = row['Type']
+                if source_id in G.nodes and target_id in G.nodes:
+                    G.add_edge(source_id, target_id, label=edge_type)
+
 
             with st.spinner("Calculating graph metrics..."):
                 progress = stqdm(total=4, desc="Calculating Graph Metrics")
