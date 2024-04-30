@@ -758,12 +758,10 @@ def main():
 
                         # Replace the placeholder with the actual data JSON string
                         html_code = html_template.replace("{data_json}", data_json)
-                        time.sleep(10)
+                        time.sleep(20)
                         # Render the HTML code using Streamlit's components
                         components.html(html_code, height=1200, width=2400)
-                        #mermaid = result['mermaid_chart']
-                        # Remove any leading/trailing whitespace
-                        # Rest of the code...
+
 
                     except Exception as e:
                         print(f"Script execution failed with error: {str(e)}")
@@ -772,20 +770,6 @@ def main():
 
                 except Exception as e:
                     st.error(f"An error occurred while running the semantic script: {str(e)}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
