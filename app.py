@@ -452,7 +452,7 @@ def merge_similar_nodes(G, similarity_threshold=0.8):
                 if node1 != node2 and node2 not in merged_nodes:
                     label1 = G.nodes[node1]['label']
                     label2 = G.nodes[node2]['label']
-                    similarity = Levenshtein.ratio(label1, label2)
+                    similarity = Levenshtein.ratio(label1.lower().rstrip('.'), label2.lower().rstrip('.'))
                     if similarity >= similarity_threshold:
                         # Merge nodes
                         G = nx.contracted_nodes(G, node1, node2, self_loops=False)
@@ -554,7 +554,7 @@ def main():
             for _, row in edges_df.iterrows():
                 G.add_edge(row['Source'], row['Target'], label=row['Type'])
             # Merge similar nodes
-            G = merge_similar_nodes(G, similarity_threshold=0.8)
+            G = merge_similar_nodes(G, similarity_threshold=0.7)
             with st.spinner("Calculating graph metrics..."):
                 progress = stqdm(total=4, desc="Calculating Graph Metrics")
                 pagerank = nx.pagerank(G)
