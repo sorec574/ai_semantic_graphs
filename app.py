@@ -447,22 +447,22 @@ def merge_similar_nodes(G, similarity_threshold=0.8):
     """
     # Find strongly connected components in the graph
     sccs = list(nx.algorithms.components.strongly_connected_components(G))
-    
+
     for scc in sccs:
         if len(scc) > 1:
             # Get the labels of the nodes in the strongly connected component
             labels = [G.nodes[node].get('label', '') for node in scc]
-            
+
             # Find the most common label among the nodes
             most_common_label = max(set(labels), key=labels.count)
-            
-            # Merge nodes with similar labels
-            for node in scc:
-                if G.nodes[node].get('label', '') != most_common_label:
-                    if Levenshtein.ratio(G.nodes[node].get('label', ''), most_common_label) >= similarity_threshold:
-                        if scc[0] in G:  # Check if scc[0] is a valid node in the graph
-                            G = nx.contracted_nodes(G, scc, node, self_loops=False)
 
+            # Merge nodes with similar labels
+            nodes_to_merge = [node for node in scc if G.nodes[node].get('label', '') != most_common_label]
+            if nodes_to_merge:
+                representative_node = next(iter(scc))  # Choose the first node as the representative
+                for node in nodes_to_merge:
+                    if Levenshtein.ratio(G.nodes[node].get('label', ''), most_common_label) >= similarity_threshold:
+                        G = nx.contracted_nodes(G, representative_node, node, self_loops=False)
 
     return G
 
