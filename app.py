@@ -436,45 +436,33 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
             f.write(f"{relationship[0]},{relationship[1]},{relationship[2]}\n")
             time.sleep(0.01)  # Simulate progress
 
-def merge_similar_nodes(G, nodes_df, edges_df, similarity_threshold=0.8):
+def merge_similar_nodes(G, similarity_threshold=0.8):
     """
-    Merges similar nodes in the graph based on their label similarity.
+    Merges similar nodes in the directed graph based on their label similarity.
     Args:
-        G (NetworkX graph): The graph to merge similar nodes in.
-        nodes_df (DataFrame): The DataFrame containing node information.
-        edges_df (DataFrame): The DataFrame containing edge information.
+        G (NetworkX graph): The directed graph to merge similar nodes in.
         similarity_threshold (float, optional): The threshold for label similarity. Defaults to 0.8.
     Returns:
-        tuple: A tuple containing the updated graph, nodes DataFrame, and edges DataFrame.
+        NetworkX graph: The directed graph with similar nodes merged.
     """
-    merged_nodes = {}
-    for node1 in G.nodes():
-        if node1 not in merged_nodes:
-            for node2 in G.nodes():
-                if node1 != node2 and node2 not in merged_nodes.values():
-                    label1 = nodes_df.loc[nodes_df["Id"] == node1, "Label"].values[0]
-                    label2 = nodes_df.loc[nodes_df["Id"] == node2, "Label"].values[0]
-                    similarity = Levenshtein.ratio(label1.lower().rstrip('.'), label2.lower().rstrip('.'))
-                    if similarity >= similarity_threshold:
-                        # Merge nodes
-                        merged_nodes[node2] = node1
-                        
-                        # Update edges connected to the merged node
-                        edges_df.loc[edges_df["Source"] == node2, "Source"] = node1
-                        edges_df.loc[edges_df["Target"] == node2, "Target"] = node1
-                        
-                        # Remove self-loops created by merging nodes
-                        edges_df = edges_df[(edges_df["Source"] != edges_df["Target"])]
-                        
-                        break
+    # Find strongly connected components in the graph
+    sccs = list(nx.algorithms.components.strongly_connected_components(G))
     
-    # Remove merged nodes from the nodes DataFrame
-    nodes_df = nodes_df[~nodes_df["Id"].isin(merged_nodes.keys())]
+    for scc in sccs:
+        if len(scc) > 1:
+            # Get the labels of the nodes in the strongly connected component
+            labels = [G.nodes[node].get('label', '') for node in scc]
+            
+            # Find the most common label among the nodes
+            most_common_label = max(set(labels), key=labels.count)
+            
+            # Merge nodes with similar labels
+            for node in scc:
+                if G.nodes[node].get('label', '') != most_common_label:
+                    if Levenshtein.ratio(G.nodes[node].get('label', ''), most_common_label) >= similarity_threshold:
+                        G = nx.contracted_nodes(G, scc[0], node, self_loops=False)
     
-    # Update the graph with merged nodes and edges
-    G = nx.from_pandas_edgelist(edges_df, source="Source", target="Target", edge_attr="Type", create_using=nx.DiGraph())
-    
-    return G, nodes_df, edges_df
+    return G
 
 # Streamlit app
 def main():
