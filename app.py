@@ -603,8 +603,9 @@ def main():
             results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
                                                'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
             # Populate the DataFrame with the results
+            # Populate the DataFrame with the results
             for node in G.nodes():
-                node_label = G.nodes[node].get('label', '')  # Use get() to handle missing 'label' attribute
+                node_label = G.nodes[node].get('label', str(node))  # Use node ID as label if 'label' attribute is missing
                 community = partition[node]
                 personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
                 new_row = pd.DataFrame({
