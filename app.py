@@ -461,7 +461,8 @@ def merge_similar_nodes(G, similarity_threshold=0.8):
                 if G.nodes[node].get('label', '') != most_common_label:
                     if Levenshtein.ratio(G.nodes[node].get('label', ''), most_common_label) >= similarity_threshold:
                         if scc[0] in G:  # Check if scc[0] is a valid node in the graph
-                            G = nx.contracted_nodes(G, scc[0], node, self_loops=False)
+                            G = nx.contracted_nodes(G, scc, node, self_loops=False)
+
 
     return G
 
