@@ -436,29 +436,45 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
             f.write(f"{relationship[0]},{relationship[1]},{relationship[2]}\n")
             time.sleep(0.01)  # Simulate progress
 
-def merge_similar_nodes(G, similarity_threshold=0.8):
+def merge_similar_nodes(G, nodes_df, edges_df, similarity_threshold=0.8):
     """
     Merges similar nodes in the graph based on their label similarity.
     Args:
         G (NetworkX graph): The graph to merge similar nodes in.
+        nodes_df (DataFrame): The DataFrame containing node information.
+        edges_df (DataFrame): The DataFrame containing edge information.
         similarity_threshold (float, optional): The threshold for label similarity. Defaults to 0.8.
     Returns:
-        NetworkX graph: The graph with similar nodes merged.
+        tuple: A tuple containing the updated graph, nodes DataFrame, and edges DataFrame.
     """
-    merged_nodes = set()
+    merged_nodes = {}
     for node1 in G.nodes():
         if node1 not in merged_nodes:
             for node2 in G.nodes():
-                if node1 != node2 and node2 not in merged_nodes:
-                    label1 = G.nodes[node1]['label']
-                    label2 = G.nodes[node2]['label']
+                if node1 != node2 and node2 not in merged_nodes.values():
+                    label1 = nodes_df.loc[nodes_df["Id"] == node1, "Label"].values[0]
+                    label2 = nodes_df.loc[nodes_df["Id"] == node2, "Label"].values[0]
                     similarity = Levenshtein.ratio(label1.lower().rstrip('.'), label2.lower().rstrip('.'))
                     if similarity >= similarity_threshold:
                         # Merge nodes
-                        G = nx.contracted_nodes(G, node1, node2, self_loops=False)
-                        merged_nodes.add(node2)
+                        merged_nodes[node2] = node1
+                        
+                        # Update edges connected to the merged node
+                        edges_df.loc[edges_df["Source"] == node2, "Source"] = node1
+                        edges_df.loc[edges_df["Target"] == node2, "Target"] = node1
+                        
+                        # Remove self-loops created by merging nodes
+                        edges_df = edges_df[(edges_df["Source"] != edges_df["Target"])]
+                        
                         break
-    return G
+    
+    # Remove merged nodes from the nodes DataFrame
+    nodes_df = nodes_df[~nodes_df["Id"].isin(merged_nodes.keys())]
+    
+    # Update the graph with merged nodes and edges
+    G = nx.from_pandas_edgelist(edges_df, source="Source", target="Target", edge_attr="Type", create_using=nx.DiGraph())
+    
+    return G, nodes_df, edges_df
 
 # Streamlit app
 def main():
@@ -554,7 +570,8 @@ def main():
             for _, row in edges_df.iterrows():
                 G.add_edge(row['Source'], row['Target'], label=row['Type'])
             # Merge similar nodes
-            G = merge_similar_nodes(G, similarity_threshold=0.7)
+            G, nodes_df, edges_df = merge_similar_nodes(G, nodes_df, edges_df, similarity_threshold=0.8)
+
             with st.spinner("Calculating graph metrics..."):
                 progress = stqdm(total=4, desc="Calculating Graph Metrics")
                 pagerank = nx.pagerank(G)
@@ -668,9 +685,9 @@ def main():
 
 
                         #st.dataframe(results_df)
-                        st.subheader("DataFrame Summary")
-                        st.dataframe(nodes_df,use_container_width=True)
-                        st.dataframe(edges_df,use_container_width=True)
+                        #st.subheader("DataFrame Summary")
+                        #st.dataframe(nodes_df,use_container_width=True)
+                        #st.dataframe(edges_df,use_container_width=True)
 
                         nodes4 = nodes_df
                         edges4 = edges_df
@@ -702,8 +719,11 @@ def main():
 
                         # Generate the edge data
                         edge_data = []
-                        for _, row in edges4.iterrows():
-                            edge_data.append({"from": str(row["Source"]), "to": str(row["Target"]), "label": str(row["Type"])})
+                        for _, row in edges_df.iterrows():
+                            source_id = str(row["Source"])
+                            target_id = str(row["Target"])
+                            if source_id in nodes_df["Id"].values and target_id in nodes_df["Id"].values:
+                                edge_data.append({"from": source_id, "to": target_id, "label": str(row["Type"])})
 
                         # Prepare the data as a JSON string
                         data_json = json.dumps({"nodes": node_data, "edges": edge_data})
